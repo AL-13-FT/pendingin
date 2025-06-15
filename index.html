@@ -134,8 +134,7 @@
     </div>
 
     <div class="aktif-menit">
-      Lama Waktu menyala: <span id="aktifMenit">--</span> menit<br>
-      Format: <span id="waktuAktif">--:--</span>
+      Lama Waktu menyala: <span id="waktuAktif">--:--</span>
     </div>
   </div>
 
@@ -159,13 +158,7 @@
       document.getElementById("suhu").textContent = suhu + " °C";
     });
 
-    // Lama aktif (menit)
-    db.ref("/DATA/aktif_menit").on("value", (snapshot) => {
-      const menit = snapshot.val();
-      document.getElementById("aktifMenit").textContent = menit;
-    });
-
-    // Format waktu aktif (jam:menit)
+    // Tampilkan waktu aktif dalam format HH:MM
     db.ref("/DATA/waktu_aktif").on("value", (snapshot) => {
       const totalMenit = snapshot.val();
       if (typeof totalMenit === "number" && totalMenit >= 0) {
