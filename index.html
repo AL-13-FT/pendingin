@@ -107,6 +107,7 @@
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 </head>
 <body>
   <div class="card">
@@ -140,90 +141,101 @@
 
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyAFHeWf7DeuUkF9ex3LB3a2gQVCFFgZ-cg",
-      authDomain: "sistem-pendingin.firebaseapp.com",
-      databaseURL: "https://sistem-pendingin-default-rtdb.firebaseio.com",
-      projectId: "sistem-pendingin",
-      storageBucket: "sistem-pendingin.appspot.com",
-      messagingSenderId: "127904975797",
-      appId: "1:127904975797:web:b9e73aee0006e3d28ca7fc"
+      apiKey: "AIzaSyDokqJLDPntB23tbYJov60yziZd90d3ZQI",
+      authDomain: "project-pendingin-tec.firebaseapp.com",
+      databaseURL: "https://project-pendingin-tec-default-rtdb.firebaseio.com",
+      projectId: "project-pendingin-tec",
+      storageBucket: "project-pendingin-tec.appspot.com",
+      messagingSenderId: "684498125082",
+      appId: "1:684498125082:web:8b79225ba33054106ceca3",
     };
 
     firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    const auth = firebase.auth();
 
-    // Tampilkan suhu realtime
-    db.ref("/DATA/suhu").on("value", (snapshot) => {
-      const suhu = snapshot.val();
-      document.getElementById("suhu").textContent = suhu + " °C";
-    });
+    auth.signInWithEmailAndPassword("esp32@sistem.com", "esp32securepass")
+      .then((userCredential) => {
+        console.log("Login berhasil:", userCredential.user.email);
+        startApp();
+      })
+      .catch((error) => {
+        console.error("Login gagal:", error.message);
+        alert("Gagal login ke Firebase: " + error.message);
+      });
 
-    // Tampilkan waktu aktif dalam format HH:MM
-    db.ref("/DATA/waktu_aktif").on("value", (snapshot) => {
-      const totalMenit = snapshot.val();
-      if (typeof totalMenit === "number" && totalMenit >= 0) {
-        const jam = Math.floor(totalMenit / 60);
-        const menit = totalMenit % 60;
-        const format = `${jam.toString().padStart(2, '0')}:${menit.toString().padStart(2, '0')}`;
-        document.getElementById("waktuAktif").textContent = format;
-      } else {
-        document.getElementById("waktuAktif").textContent = "--:--";
-      }
-    });
+    function startApp() {
+      const db = firebase.database();
 
-    // Sinkronisasi status saat load halaman
-    db.ref("/DATA/sistem_utama").on("value", (snap) => {
-      document.getElementById("switchUtama").checked = snap.val() === "ON";
-    });
-    db.ref("/DATA/mode_15").on("value", (snap) => {
-      document.getElementById("switch15").checked = snap.val() === "ON";
-    });
-    db.ref("/DATA/mode_20").on("value", (snap) => {
-      document.getElementById("switch20").checked = snap.val() === "ON";
-    });
+      db.ref("/DATA/suhu").on("value", (snapshot) => {
+        const suhu = snapshot.val();
+        document.getElementById("suhu").textContent = suhu + " °C";
+      });
 
-    function toggleUtama() {
-      const status = document.getElementById("switchUtama").checked;
-      db.ref("/DATA/sistem_utama").set(status ? "ON" : "OFF");
-      if (!status) {
-        db.ref("/DATA/mode_15").set("OFF");
-        db.ref("/DATA/mode_20").set("OFF");
-        document.getElementById("switch15").checked = false;
-        document.getElementById("switch20").checked = false;
-      }
-    }
-
-    function toggleMode(mode) {
-      const sistemUtama = document.getElementById("switchUtama").checked;
-      const switch15 = document.getElementById("switch15");
-      const switch20 = document.getElementById("switch20");
-
-      if (!sistemUtama) {
-        alert("Aktifkan Sistem Utama terlebih dahulu!");
-        switch15.checked = false;
-        switch20.checked = false;
-        return;
-      }
-
-      if (mode === "mode_15") {
-        if (switch15.checked) {
-          switch20.checked = false;
-          db.ref("/DATA/mode_15").set("ON");
-          db.ref("/DATA/mode_20").set("OFF");
+      db.ref("/DATA/waktu_aktif").on("value", (snapshot) => {
+        const totalMenit = snapshot.val();
+        if (typeof totalMenit === "number" && totalMenit >= 0) {
+          const jam = Math.floor(totalMenit / 60);
+          const menit = totalMenit % 60;
+          const format = `${jam.toString().padStart(2, '0')}:${menit.toString().padStart(2, '0')}`;
+          document.getElementById("waktuAktif").textContent = format;
         } else {
-          db.ref("/DATA/mode_15").set("OFF");
+          document.getElementById("waktuAktif").textContent = "--:--";
         }
-      }
+      });
 
-      if (mode === "mode_20") {
-        if (switch20.checked) {
+      db.ref("/DATA/sistem_utama").on("value", (snap) => {
+        document.getElementById("switchUtama").checked = snap.val() === "ON";
+      });
+      db.ref("/DATA/mode_15").on("value", (snap) => {
+        document.getElementById("switch15").checked = snap.val() === "ON";
+      });
+      db.ref("/DATA/mode_20").on("value", (snap) => {
+        document.getElementById("switch20").checked = snap.val() === "ON";
+      });
+
+      window.toggleUtama = function () {
+        const status = document.getElementById("switchUtama").checked;
+        db.ref("/DATA/sistem_utama").set(status ? "ON" : "OFF");
+        if (!status) {
+          db.ref("/DATA/mode_15").set("OFF");
+          db.ref("/DATA/mode_20").set("OFF");
+          document.getElementById("switch15").checked = false;
+          document.getElementById("switch20").checked = false;
+        }
+      };
+
+      window.toggleMode = function (mode) {
+        const sistemUtama = document.getElementById("switchUtama").checked;
+        const switch15 = document.getElementById("switch15");
+        const switch20 = document.getElementById("switch20");
+
+        if (!sistemUtama) {
+          alert("Aktifkan Sistem Utama terlebih dahulu!");
           switch15.checked = false;
-          db.ref("/DATA/mode_20").set("ON");
-          db.ref("/DATA/mode_15").set("OFF");
-        } else {
-          db.ref("/DATA/mode_20").set("OFF");
+          switch20.checked = false;
+          return;
         }
-      }
+
+        if (mode === "mode_15") {
+          if (switch15.checked) {
+            switch20.checked = false;
+            db.ref("/DATA/mode_15").set("ON");
+            db.ref("/DATA/mode_20").set("OFF");
+          } else {
+            db.ref("/DATA/mode_15").set("OFF");
+          }
+        }
+
+        if (mode === "mode_20") {
+          if (switch20.checked) {
+            switch15.checked = false;
+            db.ref("/DATA/mode_20").set("ON");
+            db.ref("/DATA/mode_15").set("OFF");
+          } else {
+            db.ref("/DATA/mode_20").set("OFF");
+          }
+        }
+      };
     }
   </script>
 </body>
